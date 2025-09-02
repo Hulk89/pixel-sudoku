@@ -34,8 +34,8 @@ class App():
         # NOTE: draw cell
         for i in range(9):
             for j in range(9):
-                color = pyxel.COLOR_GRAY
-                text_color = pyxel.COLOR_WHITE
+                color = pyxel.COLOR_LIGHT_BLUE
+                text_color = pyxel.COLOR_BLACK
                 prob_data = self.sudoku.problem_array[j][i]
 
                 if self.position[0] == i and self.position[1] == j:
@@ -58,6 +58,8 @@ class App():
                     text_color = pyxel.COLOR_BLACK
                 else:
                     rect_func = pyxel.rectb
+                    color = pyxel.COLOR_GRAY
+                    text_color = pyxel.COLOR_WHITE
 
                 rect_func(12 + i * CELL_SIZE,
                           12 + j * CELL_SIZE,
