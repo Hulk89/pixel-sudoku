@@ -17,6 +17,7 @@ class SudokuData:
     def __init__(self):
         self.solution_array = self._transform(SudokuData.INITAL_SUDOKU)
         self.problem_array = self._omit_number(self.solution_array)
+        self.solve_array = [row[:] for row in self.problem_array]
 
     @staticmethod
     def _transform(array: List[List[int]]) -> List[List[int]]:
