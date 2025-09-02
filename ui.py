@@ -45,6 +45,7 @@ class App():
                 input_x = (m_x - OFFSET_INPUT[0]) // CELL_SIZE
                 input_y = (m_y - OFFSET_INPUT[1]) // CELL_SIZE
                 if sum(self.position) != sum(INITIAL_POS):
+                    # TODO: validation check
                     self.sudoku.solve_array[self.position[1]][self.position[0]] = INPUT_LIST[input_y][input_x]
                 self.position = INITIAL_POS
 

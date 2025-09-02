@@ -40,5 +40,13 @@ class SudokuData:
         new_arr[0][0] = 0
         new_arr[8][8] = 0
         return new_arr
+    
+    @staticmethod
+    def is_valid(array: List[List[int]], pos_x: int, pos_y: int, value: int) -> bool:
+        """
+        sudoku array의 pos_x, pos_y에 value가 들어갔을 떄 풀 수 있는 것인지 확인
+        """
+        return False
+
 
 
