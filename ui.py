@@ -5,6 +5,13 @@ from srcs.sudoku import SudokuData
 INITIAL_POS = (-1, -1)
 RESOLUTION = (240, 320)
 CELL_SIZE = 24
+MARGIN_CELL = (min(*RESOLUTION) - (9 * CELL_SIZE)) // 2
+OFFSET_CELL = (MARGIN_CELL, MARGIN_CELL)
+
+OFFSET_INPUT = (RESOLUTION[0] - 4 - (3 * CELL_SIZE),
+                RESOLUTION[0] + 4)
+
+INPUT_LIST = [[1,2,3],[4,5,6],[7,8,9]]
 class App():
     def __init__(self):
         self.sudoku = SudokuData()
@@ -15,18 +22,32 @@ class App():
         pyxel.run(self.update, self.draw)
 
     def update(self):
+        m_x = pyxel.mouse_x
+        m_y = pyxel.mouse_y
+
         if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-            # NOTE: cell check
-            pos_x = (pyxel.mouse_x - 12) // CELL_SIZE
-            pos_y = (pyxel.mouse_y - 12) // CELL_SIZE
-            if pos_x >= 0 and pos_x < 9 and \
-               pos_y >= 0 and pos_y < 9:
-                prob_data = self.sudoku.problem_array[pos_y][pos_x]
-                if prob_data != 0:
-                    return
-                self.position = (pos_x, pos_y)
-                return
-            # TODO: input check
+            if m_x > OFFSET_CELL[0] and m_x < RESOLUTION[0] - OFFSET_CELL[0] and \
+               m_y > OFFSET_CELL[1] and m_y < RESOLUTION[0] - OFFSET_CELL[1]:
+                # NOTE: cell check
+                cell_x = (m_x - OFFSET_CELL[0]) // CELL_SIZE
+                cell_y = (m_y - OFFSET_CELL[1]) // CELL_SIZE
+                if cell_x >= 0 and cell_x < 9 and \
+                   cell_y >= 0 and cell_y < 9:
+                    prob_data = self.sudoku.problem_array[cell_y][cell_x]
+                    if prob_data != 0:
+                        return
+                    self.position = (cell_x, cell_y)
+            elif m_x > OFFSET_INPUT[0] and \
+                 m_x < RESOLUTION[0] - 4 and \
+                 m_y > OFFSET_INPUT[1] and \
+                 m_y < RESOLUTION[1] - 4:
+                # NOTE: input check.
+                input_x = (m_x - OFFSET_INPUT[0]) // CELL_SIZE
+                input_y = (m_y - OFFSET_INPUT[1]) // CELL_SIZE
+                if sum(self.position) != sum(INITIAL_POS):
+                    self.sudoku.solve_array[self.position[1]][self.position[0]] = INPUT_LIST[input_y][input_x]
+                self.position = INITIAL_POS
+
 
     def draw(self):
         pyxel.cls(0)
@@ -81,6 +102,19 @@ class App():
                             3 * CELL_SIZE,
                             3 * CELL_SIZE,
                             pyxel.COLOR_RED)
+
+        # NOTE: draw input square
+        for i in range(3):
+            for j in range(3):
+                pyxel.rectb(OFFSET_INPUT[0] + CELL_SIZE * i,
+                            OFFSET_INPUT[1] + CELL_SIZE * j,
+                            CELL_SIZE,
+                            CELL_SIZE,
+                            pyxel.COLOR_LIGHT_BLUE)
+                pyxel.text(OFFSET_INPUT[0] + 10 + CELL_SIZE * i,
+                           OFFSET_INPUT[1] + 10 + CELL_SIZE * j,
+                           f"{INPUT_LIST[j][i]}",
+                           pyxel.COLOR_LIGHT_BLUE)
 
 if __name__ == "__main__":
     App()
