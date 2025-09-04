@@ -8,19 +8,20 @@ CELL_SIZE = 24
 MARGIN_CELL = (min(*RESOLUTION) - (9 * CELL_SIZE)) // 2
 OFFSET_CELL = (MARGIN_CELL, MARGIN_CELL)
 
-OFFSET_INPUT = (RESOLUTION[0] - 4 - (3 * CELL_SIZE),
-                RESOLUTION[0] + 4)
+OFFSET_INPUT = (RESOLUTION[0] - 12 - (3 * CELL_SIZE),
+                RESOLUTION[0] - 4)
 
 INPUT_LIST = [[1,2,3],[4,5,6],[7,8,9]]
 
-# TODO: reset button and finish action
+# TODO: reset button
 
 
 class App():
     def __init__(self):
-        self.sudoku = SudokuData(20)
+        self.sudoku = SudokuData(2)
         self.position = INITIAL_POS
         self.highlighted_number = -1
+        self.finished = False
 
         pyxel.init(*RESOLUTION, title="Pyxel Sudoku")
         pyxel.mouse(True)
@@ -58,6 +59,14 @@ class App():
                         self.highlighted_number = INPUT_LIST[input_y][input_x]
 
                 self.position = INITIAL_POS
+
+
+        sums = sum(e for row in self.sudoku.solve_array for e in row)
+        if sums == 405:
+            self.finished = True
+
+        if self.finished:
+            return
         m_x = pyxel.mouse_x
         m_y = pyxel.mouse_y
 
@@ -137,6 +146,15 @@ class App():
                            OFFSET_INPUT[1] + 10 + CELL_SIZE * j,
                            f"{INPUT_LIST[j][i]}",
                            pyxel.COLOR_LIGHT_BLUE)
+        if self.finished:
+            x = RESOLUTION[0]//2 - 10
+            y = RESOLUTION[0] + 10
+
+            bg_txts = [(a, b) for a in [x-1, x, x+1] for b in [y-1, y, y+1]]
+
+            for bg_txt in bg_txts:
+                pyxel.text(*bg_txt, "CLEAR", pyxel.COLOR_YELLOW)
+            pyxel.text(x, y, "CLEAR", pyxel.COLOR_RED)
 
 if __name__ == "__main__":
     App()
