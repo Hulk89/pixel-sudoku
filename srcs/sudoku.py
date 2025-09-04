@@ -1,7 +1,11 @@
-from typing import List
+from typing import List, Tuple
+import random
+from srcs.solve import is_unique_solution
 
 
 class SudokuData:
+    BOARD_SIZE = 9
+    SUBGRID_SIZE = 3
     INITAL_SUDOKU = [
         [5, 3, 4, 6, 7, 8, 9, 1, 2],
         [6, 7, 2, 1, 9, 5, 3, 4, 8],
@@ -14,9 +18,9 @@ class SudokuData:
         [3, 4, 5, 2, 8, 6, 1, 7, 9]
     ]
 
-    def __init__(self):
+    def __init__(self, omit_number=15):
         self.solution_array = self._transform(SudokuData.INITAL_SUDOKU)
-        self.problem_array = self._omit_number(self.solution_array)
+        self.problem_array = self._omit_number(self.solution_array, omit_number)
         self.solve_array = [row[:] for row in self.problem_array]
 
     @staticmethod
@@ -31,22 +35,49 @@ class SudokuData:
         return new_arr
 
     @staticmethod
-    def _omit_number(array: List[List[int]], omit_number: int = 2) -> List[List[int]]:
+    def _omit_number(array: List[List[int]], omit_number) -> List[List[int]]:
         """
         sudoku array를 카피하여, omit_number만큼 숫자가 빠진 풀 수 있는 sudoku array를 리턴
         """
         new_arr = [row[:] for row in array]
-        # TODO: must be implemented
-        new_arr[0][0] = 0
-        new_arr[8][8] = 0
+
+        positions = [(i, j) for i in range(SudokuData.BOARD_SIZE) 
+                    for j in range(SudokuData.BOARD_SIZE)]
+        
+        random.shuffle(positions)
+        
+        for i in range(min(omit_number, len(positions))):
+            row, col = positions[i]
+            tmp_dat = new_arr[row][col]
+            new_arr[row][col] = 0
+
+            if not is_unique_solution(new_arr):
+                print(f"i: {i}")
+                new_arr[row][col] = tmp_dat
+                break
+            
         return new_arr
-    
+
     @staticmethod
-    def is_valid(array: List[List[int]], pos_x: int, pos_y: int, value: int) -> bool:
+    def duplicate_pos(array: List[List[int]], pos_x: int, pos_y: int, value: int):
         """
         sudoku array의 pos_x, pos_y에 value가 들어갔을 떄 풀 수 있는 것인지 확인
         """
-        return False
-
-
+        for row in range(SudokuData.BOARD_SIZE):
+            if array[row][pos_x] == value:
+                return (pos_x, row)
+        for col in range(SudokuData.BOARD_SIZE):
+            if array[pos_y][col] == value:
+                return (col, pos_y)
+        
+        # Check 3x3 box
+        box_col_start = (pos_x // SudokuData.SUBGRID_SIZE) * SudokuData.SUBGRID_SIZE
+        box_row_start = (pos_y // SudokuData.SUBGRID_SIZE) * SudokuData.SUBGRID_SIZE
+        
+        for row in range(box_row_start, box_row_start + SudokuData.SUBGRID_SIZE):
+            for col in range(box_col_start, box_col_start + SudokuData.SUBGRID_SIZE):
+                if array[row][col] == value:
+                    return (col, row)
+        
+        return None
 

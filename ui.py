@@ -12,23 +12,21 @@ OFFSET_INPUT = (RESOLUTION[0] - 4 - (3 * CELL_SIZE),
                 RESOLUTION[0] + 4)
 
 INPUT_LIST = [[1,2,3],[4,5,6],[7,8,9]]
+
 class App():
     def __init__(self):
-        self.sudoku = SudokuData()
+        self.sudoku = SudokuData(20)
         self.position = INITIAL_POS
+        self.highlighted_number = -1
 
         pyxel.init(*RESOLUTION, title="Pyxel Sudoku")
         pyxel.mouse(True)
         pyxel.run(self.update, self.draw)
 
     def update(self):
-        m_x = pyxel.mouse_x
-        m_y = pyxel.mouse_y
-
-        if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+        def update_cell(m_x, m_y):
             if m_x > OFFSET_CELL[0] and m_x < RESOLUTION[0] - OFFSET_CELL[0] and \
                m_y > OFFSET_CELL[1] and m_y < RESOLUTION[0] - OFFSET_CELL[1]:
-                # NOTE: cell check
                 cell_x = (m_x - OFFSET_CELL[0]) // CELL_SIZE
                 cell_y = (m_y - OFFSET_CELL[1]) // CELL_SIZE
                 if cell_x >= 0 and cell_x < 9 and \
@@ -37,7 +35,9 @@ class App():
                     if prob_data != 0:
                         return
                     self.position = (cell_x, cell_y)
-            elif m_x > OFFSET_INPUT[0] and \
+
+        def update_input(m_x, m_y):
+            if m_x > OFFSET_INPUT[0] and \
                  m_x < RESOLUTION[0] - 4 and \
                  m_y > OFFSET_INPUT[1] and \
                  m_y < RESOLUTION[1] - 4:
@@ -45,11 +45,24 @@ class App():
                 input_x = (m_x - OFFSET_INPUT[0]) // CELL_SIZE
                 input_y = (m_y - OFFSET_INPUT[1]) // CELL_SIZE
                 if sum(self.position) != sum(INITIAL_POS):
-                    # TODO: validation check
-                    self.sudoku.solve_array[self.position[1]][self.position[0]] = INPUT_LIST[input_y][input_x]
+                    dup_pos = SudokuData.duplicate_pos(self.sudoku.solve_array,
+                                                       self.position[0],
+                                                       self.position[1],
+                                                       INPUT_LIST[input_y][input_x])
+                    if dup_pos is None:
+                        self.sudoku.solve_array[self.position[1]][self.position[0]] = INPUT_LIST[input_y][input_x]
+                        self.highlighted_number = -1
+                    else:
+                        self.highlighted_number = INPUT_LIST[input_y][input_x]
+
                 self.position = INITIAL_POS
+        m_x = pyxel.mouse_x
+        m_y = pyxel.mouse_y
 
-
+        if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+            update_cell(m_x, m_y)
+            update_input(m_x, m_y)
+           
     def draw(self):
         pyxel.cls(0)
 
@@ -83,13 +96,19 @@ class App():
                     color = pyxel.COLOR_GRAY
                     text_color = pyxel.COLOR_WHITE
 
+                text = self.sudoku.solve_array[j][i]
+                if self.highlighted_number == text:
+                    color = pyxel.COLOR_RED
+                    text_color = pyxel.COLOR_WHITE
+                    rect_func = pyxel.rect
+
                 rect_func(12 + i * CELL_SIZE,
                           12 + j * CELL_SIZE,
                           CELL_SIZE,
                           CELL_SIZE,
                           color)
 
-                text = self.sudoku.solve_array[j][i]
+
                 if text != 0:
                     pyxel.text(12 + i * CELL_SIZE + 10,
                                12 + j * CELL_SIZE + 10,
