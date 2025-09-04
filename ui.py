@@ -13,6 +13,9 @@ OFFSET_INPUT = (RESOLUTION[0] - 4 - (3 * CELL_SIZE),
 
 INPUT_LIST = [[1,2,3],[4,5,6],[7,8,9]]
 
+# TODO: reset button and finish action
+
+
 class App():
     def __init__(self):
         self.sudoku = SudokuData(20)
@@ -38,10 +41,9 @@ class App():
 
         def update_input(m_x, m_y):
             if m_x > OFFSET_INPUT[0] and \
-                 m_x < RESOLUTION[0] - 4 and \
-                 m_y > OFFSET_INPUT[1] and \
-                 m_y < RESOLUTION[1] - 4:
-                # NOTE: input check.
+               m_x < RESOLUTION[0] - 4 and \
+               m_y > OFFSET_INPUT[1] and \
+               m_y < RESOLUTION[1] - 4:
                 input_x = (m_x - OFFSET_INPUT[0]) // CELL_SIZE
                 input_y = (m_y - OFFSET_INPUT[1]) // CELL_SIZE
                 if sum(self.position) != sum(INITIAL_POS):
