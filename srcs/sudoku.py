@@ -2,14 +2,48 @@ from typing import List, Tuple
 import random
 from srcs.solve import is_unique_solution
 
+Grid = Grid
 
-def shuffle_lines(array: List[List[int]]):
+def shuffle_lines(array: Grid) -> Grid:
+    new_arr = [row[:] for row in array]
     box_num = random.choice([0, 1, 2])
     l1, l2 = random.sample([0, 1, 2], 2)
     l1 += box_num * 3
     l2 += box_num * 3
-    array[l1], array[l2] = array[l2], array[l1]
-    return
+
+    new_arr[l1], new_arr[l2] = new_arr[l2], new_arr[l1]
+    return new_arr
+
+def rotate_90(array: Grid) -> Grid:
+    return [list(row) for row in zip(*array[::-1])]
+
+def rotate_270(array: Grid) -> Grid:
+    return [list(row) for row in zip(*array)][::-1]
+
+def rotate_180(array: Grid) -> Grid:
+    return [row[::-1] for row in array[::-1]]
+
+def change_numbers(array: Grid) -> Grid:
+    n1, n2 = random.sample([i+1 for i in range(9)], 2)
+
+    pos_list_1 = []
+    pos_list_2 = []
+    new_arr = [row[:] for row in array]
+
+    for r_i, row in enumerate(array):
+        for c_i, e in enumerate(row):
+            if e == n1:
+                pos_list_1.append((r_i, c_i))
+            elif e == n2:
+                pos_list_2.append((r_i, c_i))
+
+    for r, c in pos_list_1:
+        new_arr[r][c] = n1
+    for r, c in pos_list_2:
+        new_arr[r][c] = n2
+
+    return new_arr
+    
 
 
 
@@ -34,7 +68,7 @@ class SudokuData:
         self.solve_array = [row[:] for row in self.problem_array]
 
     @staticmethod
-    def _transform(array: List[List[int]]) -> List[List[int]]:
+    def _transform(array: Grid) -> Grid:
         """
         sudoku array를 카피하여, sudoku 패턴을 만족하는 array로 변환 후 리턴
         input: sudoku 2d array
@@ -42,13 +76,20 @@ class SudokuData:
         """
         new_arr = [row[:] for row in array]
         # TODO: must be implemented
-        for i in range(random.randint(1,8)):
-            shuffle_lines(new_arr)
+        trans_funcs = [shuffle_lines,
+                      rotate_90,
+                      rotate_180,
+                      rotate_270,
+                      change_numbers]
+
+        for _ in range(random.randint(1,20)):
+            trans_func = random.choice(trans_funcs)
+            new_arr = trans_func(new_arr)
 
         return new_arr
 
     @staticmethod
-    def _omit_number(array: List[List[int]], omit_number) -> List[List[int]]:
+    def _omit_number(array: Grid], omit_number) -> Grid:
         """
         sudoku array를 카피하여, omit_number만큼 숫자가 빠진 풀 수 있는 sudoku array를 리턴
         """
@@ -72,7 +113,7 @@ class SudokuData:
         return new_arr
 
     @staticmethod
-    def duplicate_pos(array: List[List[int]], pos_x: int, pos_y: int, value: int):
+    def duplicate_pos(array: Grid, pos_x: int, pos_y: int, value: int):
         """
         sudoku array의 pos_x, pos_y에 value가 들어갔을 떄 풀 수 있는 것인지 확인
         """
