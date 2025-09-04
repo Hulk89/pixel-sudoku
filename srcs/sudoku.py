@@ -2,7 +2,7 @@ from typing import List, Tuple
 import random
 from srcs.solve import is_unique_solution
 
-Grid = Grid
+Grid = List[List[int]]
 
 def shuffle_lines(array: Grid) -> Grid:
     new_arr = [row[:] for row in array]
@@ -89,7 +89,7 @@ class SudokuData:
         return new_arr
 
     @staticmethod
-    def _omit_number(array: Grid], omit_number) -> Grid:
+    def _omit_number(array: Grid, omit_number) -> Grid:
         """
         sudoku array를 카피하여, omit_number만큼 숫자가 빠진 풀 수 있는 sudoku array를 리턴
         """
@@ -108,6 +108,7 @@ class SudokuData:
             if not is_unique_solution(new_arr):
                 print(f"i: {i}")
                 new_arr[row][col] = tmp_dat
+                print(new_arr)
                 break
             
         return new_arr

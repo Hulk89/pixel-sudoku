@@ -1,3 +1,5 @@
+import random
+
 import pyxel
 
 from srcs.sudoku import SudokuData
@@ -18,7 +20,7 @@ INPUT_LIST = [[1,2,3],[4,5,6],[7,8,9]]
 
 class App():
     def __init__(self):
-        self.sudoku = SudokuData(20)
+        self.sudoku = SudokuData(random.randint(20, 40))
         self.position = INITIAL_POS
         self.highlighted_number = -1
         self.finished = False

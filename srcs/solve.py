@@ -9,12 +9,13 @@ def is_unique_solution(grid: Grid) -> bool:
     - grid: 2D list of ints; 0 denotes empty.
     Supports n^2 x n^2 Sudoku (e.g., 9x9, 16x16) as long as entries are 0..n^2.
     """
+    new_grid = [row[:] for row in grid]
     # Bitmask helpers
     def bit(v: int) -> int:
         return 1 << (v - 1)
 
-    n2 = len(grid)
-    if n2 == 0 or any(len(row) != n2 for row in grid):
+    n2 = len(new_grid)
+    if n2 == 0 or any(len(row) != n2 for row in new_grid):
         raise ValueError("Grid must be square (n^2 x n^2).")
     n = isqrt(n2)
     if n * n != n2:
@@ -33,7 +34,7 @@ def is_unique_solution(grid: Grid) -> bool:
     # Initialize masks; validate existing digits
     for row in range(n2):
         for col in range(n2):
-            value = grid[row][col]
+            value = new_grid[row][col]
             if value == 0:
                 empties.append((row, col))
             else:
@@ -61,7 +62,7 @@ def is_unique_solution(grid: Grid) -> bool:
         best_count = n2 + 1
 
         for i, (row, col) in enumerate(empties):
-            if grid[row][col] != 0:
+            if new_grid[row][col] != 0:
                 continue
             box_index = (row // n) * n + (col // n)
             # NOTE: row와 col, box에서 하나라도 썼으면 used의 bit는 1
@@ -108,7 +109,7 @@ def is_unique_solution(grid: Grid) -> bool:
             lsb = m & -m
             number_value = lsb.bit_length()  # bit to number
             # place
-            grid[row][col] = number_value
+            new_grid[row][col] = number_value
             row_used[row] |= lsb
             col_used[col] |= lsb
             box_used[box_index] |= lsb
@@ -122,7 +123,7 @@ def is_unique_solution(grid: Grid) -> bool:
             col_used[col] &= ~lsb
             box_used[box_index] &= ~lsb
             box_used[box_index] &= ~lsb
-            grid[row][col] = 0
+            new_grid[row][col] = 0
 
             m &= m - 1  # pop lsb
 
