@@ -18,7 +18,7 @@ INPUT_LIST = [[1,2,3],[4,5,6],[7,8,9]]
 
 class App():
     def __init__(self):
-        self.sudoku = SudokuData(2)
+        self.sudoku = SudokuData(20)
         self.position = INITIAL_POS
         self.highlighted_number = -1
         self.finished = False
@@ -37,6 +37,7 @@ class App():
                    cell_y >= 0 and cell_y < 9:
                     prob_data = self.sudoku.problem_array[cell_y][cell_x]
                     if prob_data != 0:
+                        self.highlighted_number = prob_data
                         return
                     self.position = (cell_x, cell_y)
 
@@ -137,6 +138,7 @@ class App():
         # NOTE: draw input square
         for i in range(3):
             for j in range(3):
+                # TODO: 9개 다 쓴 input은 ui로 보여주기
                 pyxel.rectb(OFFSET_INPUT[0] + CELL_SIZE * i,
                             OFFSET_INPUT[1] + CELL_SIZE * j,
                             CELL_SIZE,

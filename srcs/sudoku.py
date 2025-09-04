@@ -3,6 +3,16 @@ import random
 from srcs.solve import is_unique_solution
 
 
+def shuffle_lines(array: List[List[int]]):
+    box_num = random.choice([0, 1, 2])
+    l1, l2 = random.sample([0, 1, 2], 2)
+    l1 += box_num * 3
+    l2 += box_num * 3
+    array[l1], array[l2] = array[l2], array[l1]
+    return
+
+
+
 class SudokuData:
     BOARD_SIZE = 9
     SUBGRID_SIZE = 3
@@ -32,6 +42,9 @@ class SudokuData:
         """
         new_arr = [row[:] for row in array]
         # TODO: must be implemented
+        for i in range(random.randint(1,8)):
+            shuffle_lines(new_arr)
+
         return new_arr
 
     @staticmethod
