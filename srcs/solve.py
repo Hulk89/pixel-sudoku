@@ -9,6 +9,10 @@ def is_unique_solution(grid: Grid) -> bool:
     - grid: 2D list of ints; 0 denotes empty.
     Supports n^2 x n^2 Sudoku (e.g., 9x9, 16x16) as long as entries are 0..n^2.
     """
+    # Bitmask helpers
+    def bit(v: int) -> int:
+        return 1 << (v - 1)
+
     n2 = len(grid)
     if n2 == 0 or any(len(row) != n2 for row in grid):
         raise ValueError("Grid must be square (n^2 x n^2).")
@@ -16,11 +20,8 @@ def is_unique_solution(grid: Grid) -> bool:
     if n * n != n2:
         raise ValueError("Side length must be a perfect square (e.g., 9, 16).")
 
-    # Bitmask helpers
     # For values 1..n2, we use bits 0..(n2-1)
     FULL = (1 << n2) - 1
-    def bit(v: int) -> int:
-        return 1 << (v - 1)
 
     # Row/Col/Box masks of used digits (bit=1 means digit already used)
     row_used = [0] * n2
@@ -30,22 +31,22 @@ def is_unique_solution(grid: Grid) -> bool:
     empties: List[Tuple[int, int]] = []
 
     # Initialize masks; validate existing digits
-    for r in range(n2):
-        for c in range(n2):
-            v = grid[r][c]
-            if v == 0:
-                empties.append((r, c))
+    for row in range(n2):
+        for col in range(n2):
+            value = grid[row][col]
+            if value == 0:
+                empties.append((row, col))
             else:
-                if not (1 <= v <= n2):
-                    raise ValueError(f"Value out of range at ({r},{c}): {v}")
-                b = (r // n) * n + (c // n)
-                mask = bit(v)
-                if (row_used[r] & mask) or (col_used[c] & mask) or (box_used[b] & mask):
+                if not (1 <= value <= n2):
+                    raise ValueError(f"Value out of range at ({row},{col}): {value}")
+                box_index = (row // n) * n + (col // n)
+                mask = bit(value)
+                if (row_used[row] & mask) or (col_used[col] & mask) or (box_used[box_index] & mask):
                     # Duplicate in row/col/box → no solution
                     return False
-                row_used[r] |= mask
-                col_used[c] |= mask
-                box_used[b] |= mask
+                row_used[row] |= mask
+                col_used[col] |= mask
+                box_used[box_index] |= mask
 
     # Count solutions up to 2 (early stop once we find 2)
     sol_count = 0
@@ -59,70 +60,73 @@ def is_unique_solution(grid: Grid) -> bool:
         best_mask = 0
         best_count = n2 + 1
 
-        for i, (r, c) in enumerate(empties):
-            if grid[r][c] != 0:
+        for i, (row, col) in enumerate(empties):
+            if grid[row][col] != 0:
                 continue
-            b = (r // n) * n + (c // n)
-            used = row_used[r] | col_used[c] | box_used[b]
+            box_index = (row // n) * n + (col // n)
+            # NOTE: row와 col, box에서 하나라도 썼으면 used의 bit는 1
+            # 따라서 unused_count는 하나도 안쓴 number의 갯수를 샌다.
+            used = row_used[row] | col_used[col] | box_used[box_index]
             cand_mask = FULL & ~used
+
             # No candidates -> dead end
             if cand_mask == 0:
-                return r, c, 0
+                return row, col, 0
             # Count bits (number of candidates)
-            cnt = cand_mask.bit_count()
-            if cnt < best_count:
-                best_count = cnt
+            unused_count = cand_mask.bit_count()
+            if unused_count < best_count:
+                best_count = unused_count
                 best_mask = cand_mask
                 best_idx = i
-                if cnt == 1:  # cannot do better
+                if unused_count == 1:  # cannot do better
                     break
         if best_idx == -1:
             return None
         # Move this cell to front to reduce future scans (optional)
         empties[0], empties[best_idx] = empties[best_idx], empties[0]
-        r, c = empties[0]
-        return r, c, best_mask
+        row, col = empties[0]
+        return row, col, best_mask
 
-    def dfs() -> bool:
+    def dfs():
         nonlocal sol_count
         if sol_count >= 2:
-            return True  # early terminate
+            return
         sel = select_cell()
         if sel is None:
             # All filled → one solution found
             sol_count += 1
-            return sol_count >= 2
-        r, c, cand_mask = sel
+            return
+        row, col, cand_mask = sel
         if cand_mask == 0:
-            return False
+            return
 
-        b = (r // n) * n + (c // n)
+        box_index = (row // n) * n + (col // n)
 
         # Try candidates (least to greatest)
         m = cand_mask
         while m:
             lsb = m & -m
-            v = (lsb.bit_length() - 1) + 1  # convert bit -> value
+            number_value = lsb.bit_length()  # bit to number
             # place
-            grid[r][c] = v
-            row_used[r] |= lsb
-            col_used[c] |= lsb
-            box_used[b] |= lsb
+            grid[row][col] = number_value
+            row_used[row] |= lsb
+            col_used[col] |= lsb
+            box_used[box_index] |= lsb
 
             dfs()
             if sol_count >= 2:
-                return True
+                return
 
             # undo
-            row_used[r] &= ~lsb
-            col_used[c] &= ~lsb
-            box_used[b] &= ~lsb
-            box_used[b] &= ~lsb
-            grid[r][c] = 0
+            row_used[row] &= ~lsb
+            col_used[col] &= ~lsb
+            box_used[box_index] &= ~lsb
+            box_used[box_index] &= ~lsb
+            grid[row][col] = 0
 
             m &= m - 1  # pop lsb
 
-        return False
+        return
 
     dfs()
     return sol_count == 1
