@@ -106,9 +106,7 @@ class SudokuData:
             new_arr[row][col] = 0
 
             if not is_unique_solution(new_arr):
-                print(f"i: {i}")
                 new_arr[row][col] = tmp_dat
-                print(new_arr)
                 break
             
         return new_arr
