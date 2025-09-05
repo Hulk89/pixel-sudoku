@@ -12,57 +12,80 @@ OFFSET_CELL = (MARGIN_CELL, MARGIN_CELL)
 
 OFFSET_INPUT = (RESOLUTION[0] - 12 - (3 * CELL_SIZE),
                 RESOLUTION[0] - 4)
+OFFSET_RESET = (20, RESOLUTION[0] + (RESOLUTION[1] - RESOLUTION[0])//2 - 10)
+RESET_WH = (40, 20)
 
 INPUT_LIST = [[1,2,3],[4,5,6],[7,8,9]]
 
-# TODO: reset button
+def is_cell_selected(m_x, m_y):
+    if (m_x > OFFSET_CELL[0] and 
+        m_x < RESOLUTION[0] - OFFSET_CELL[0] and
+        m_y > OFFSET_CELL[1] and 
+        m_y < RESOLUTION[0] - OFFSET_CELL[1]):
+        return True
+    else:
+        return False
+
+def is_input_selected(m_x, m_y):
+    if (m_x > OFFSET_INPUT[0] and
+        m_x < RESOLUTION[0] - 4 and
+        m_y > OFFSET_INPUT[1] and
+        m_y < RESOLUTION[1] - 4):
+        return True
+    else:
+        return False
+
+def is_reset_selected(m_x, m_y):
+    if (m_x > OFFSET_RESET[0] and m_x < OFFSET_RESET[0] + RESET_WH[0] and
+        m_y > OFFSET_RESET[1] and m_y < OFFSET_RESET[1] + RESET_WH[1]):
+        return True
+    else:
+        return False
+
 
 
 class App():
     def __init__(self):
+        self.init_game()
+        pyxel.init(*RESOLUTION, title="Pyxel Sudoku")
+        pyxel.mouse(True)
+        pyxel.run(self.update, self.draw)
+
+    def init_game(self):
         self.sudoku = SudokuData(random.randint(20, 40))
         self.position = INITIAL_POS
         self.highlighted_number = -1
         self.finished = False
 
-        pyxel.init(*RESOLUTION, title="Pyxel Sudoku")
-        pyxel.mouse(True)
-        pyxel.run(self.update, self.draw)
-
     def update(self):
         def update_cell(m_x, m_y):
-            if m_x > OFFSET_CELL[0] and m_x < RESOLUTION[0] - OFFSET_CELL[0] and \
-               m_y > OFFSET_CELL[1] and m_y < RESOLUTION[0] - OFFSET_CELL[1]:
-                cell_x = (m_x - OFFSET_CELL[0]) // CELL_SIZE
-                cell_y = (m_y - OFFSET_CELL[1]) // CELL_SIZE
-                if cell_x >= 0 and cell_x < 9 and \
-                   cell_y >= 0 and cell_y < 9:
-                    prob_data = self.sudoku.problem_array[cell_y][cell_x]
-                    if prob_data != 0:
-                        self.highlighted_number = prob_data
-                        return
+            cell_x = (m_x - OFFSET_CELL[0]) // CELL_SIZE
+            cell_y = (m_y - OFFSET_CELL[1]) // CELL_SIZE
+            if (cell_x >= 0 and cell_x < 9 and
+                cell_y >= 0 and cell_y < 9):
+                number = self.sudoku.solve_array[cell_y][cell_x]
+                prob_num = self.sudoku.problem_array[cell_y][cell_x]
+
+                if number != 0:
+                    self.highlighted_number = number
+                if prob_num == 0:
                     self.position = (cell_x, cell_y)
 
         def update_input(m_x, m_y):
-            if m_x > OFFSET_INPUT[0] and \
-               m_x < RESOLUTION[0] - 4 and \
-               m_y > OFFSET_INPUT[1] and \
-               m_y < RESOLUTION[1] - 4:
-                input_x = (m_x - OFFSET_INPUT[0]) // CELL_SIZE
-                input_y = (m_y - OFFSET_INPUT[1]) // CELL_SIZE
-                if sum(self.position) != sum(INITIAL_POS):
-                    dup_pos = SudokuData.duplicate_pos(self.sudoku.solve_array,
-                                                       self.position[0],
-                                                       self.position[1],
-                                                       INPUT_LIST[input_y][input_x])
-                    if dup_pos is None:
-                        self.sudoku.solve_array[self.position[1]][self.position[0]] = INPUT_LIST[input_y][input_x]
-                        self.highlighted_number = -1
-                    else:
-                        self.highlighted_number = INPUT_LIST[input_y][input_x]
+            input_x = (m_x - OFFSET_INPUT[0]) // CELL_SIZE
+            input_y = (m_y - OFFSET_INPUT[1]) // CELL_SIZE
+            if sum(self.position) != sum(INITIAL_POS):
+                dup_pos = SudokuData.duplicate_pos(self.sudoku.solve_array,
+                                                    self.position[0],
+                                                    self.position[1],
+                                                    INPUT_LIST[input_y][input_x])
+                if dup_pos is None:
+                    self.sudoku.solve_array[self.position[1]][self.position[0]] = INPUT_LIST[input_y][input_x]
+                    self.highlighted_number = -1
+                else:
+                    self.highlighted_number = INPUT_LIST[input_y][input_x]
 
-                self.position = INITIAL_POS
-
+            self.position = INITIAL_POS
 
         sums = sum(e for row in self.sudoku.solve_array for e in row)
         if sums == 405:
@@ -74,8 +97,12 @@ class App():
         m_y = pyxel.mouse_y
 
         if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-            update_cell(m_x, m_y)
-            update_input(m_x, m_y)
+            if is_cell_selected(m_x, m_y):
+                update_cell(m_x, m_y)
+            elif is_input_selected(m_x, m_y):
+                update_input(m_x, m_y)
+            elif is_reset_selected(m_x, m_y):
+                self.init_game()
            
     def draw(self):
         pyxel.cls(0)
@@ -111,7 +138,8 @@ class App():
                     text_color = pyxel.COLOR_WHITE
 
                 text = self.sudoku.solve_array[j][i]
-                if self.highlighted_number == text:
+                if (self.highlighted_number == text and
+                    not (self.position[0] == i and self.position[1] == j)):
                     color = pyxel.COLOR_RED
                     text_color = pyxel.COLOR_WHITE
                     rect_func = pyxel.rect
@@ -121,7 +149,6 @@ class App():
                           CELL_SIZE,
                           CELL_SIZE,
                           color)
-
 
                 if text != 0:
                     pyxel.text(12 + i * CELL_SIZE + 10,
@@ -159,6 +186,14 @@ class App():
             for bg_txt in bg_txts:
                 pyxel.text(*bg_txt, "CLEAR", pyxel.COLOR_YELLOW)
             pyxel.text(x, y, "CLEAR", pyxel.COLOR_RED)
+
+        pyxel.rect(*OFFSET_RESET,
+                   *RESET_WH,
+                   pyxel.COLOR_RED)
+        pyxel.text(OFFSET_RESET[0] + 11,
+                   OFFSET_RESET[1] + 8,
+                   "RESET",
+                   pyxel.COLOR_WHITE)
 
 if __name__ == "__main__":
     App()
