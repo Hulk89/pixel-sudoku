@@ -91,19 +91,18 @@ class App():
         if sums == 405:
             self.finished = True
 
-        if self.finished:
-            return
         m_x = pyxel.mouse_x
         m_y = pyxel.mouse_y
 
         if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-            if is_cell_selected(m_x, m_y):
-                update_cell(m_x, m_y)
-            elif is_input_selected(m_x, m_y):
-                update_input(m_x, m_y)
-            elif is_reset_selected(m_x, m_y):
+            if is_reset_selected(m_x, m_y):
                 self.init_game()
-           
+            if not self.finished:
+                if is_cell_selected(m_x, m_y):
+                    update_cell(m_x, m_y)
+                elif is_input_selected(m_x, m_y):
+                    update_input(m_x, m_y)
+ 
     def draw(self):
         pyxel.cls(0)
 
